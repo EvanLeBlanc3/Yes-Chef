@@ -16,6 +16,7 @@ const st = {
   pantry: new Set(LS.get('pantry', [])),
   tools: new Set(LS.get('tools', [])),
   favs: new Set(LS.get('favs', [])),
+  log: LS.get('log', {}),
   custom: LS.get('custom', []),
   myIng: LS.get('myIng', []),
   myTools: LS.get('myTools', []),
@@ -25,6 +26,7 @@ const save = {
   pantry: () => LS.set('pantry', [...st.pantry]),
   tools: () => LS.set('tools', [...st.tools]),
   favs: () => LS.set('favs', [...st.favs]),
+  log: () => LS.set('log', st.log),
   custom: () => LS.set('custom', st.custom),
   myIng: () => LS.set('myIng', st.myIng),
   myTools: () => LS.set('myTools', st.myTools),
@@ -162,6 +164,12 @@ function go(tab) {
 $('#nav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { Snd.whoosh(); go(b.dataset.tab); } });
 function render() { ({ recipes: vRecipes, match: vMatch, pantry: vPantry, kitchen: vKitchen, favs: vFavs })[UI.tab](); }
 
+/* ================= NUTRITION & RATINGS ================= */
+const nutCache = new Map();
+function nutOf(r) { const key = r.id + ':' + (r.mine ? JSON.stringify(r.ing).length + ':' + r.serves : ''); if (!nutCache.has(key)) nutCache.set(key, ycNutrition(D, r)); return nutCache.get(key); }
+const logOf = id => st.log[id] || [];
+function ratingOf(id) { const l = logOf(id).filter(e => e.stars); return l.length ? l.reduce((a, e) => a + e.stars, 0) / l.length : 0; }
+const starStr = (v, cls = '') => `<span class="stars ${cls}">${[1, 2, 3, 4, 5].map(k => `<i class="${v >= k - .25 ? 'on' : v >= k - .75 ? 'half' : ''}">★</i>`).join('')}</span>`;
 /* ================= PICTURES ================= */
 const picSrc = r => r.photo || (r.img ? 'img/' + r.img + '.webp' : '');
 function pic(r, big) {
@@ -178,7 +186,8 @@ function card(r, i) {
     <button class="fav ${st.favs.has(r.id) ? 'on' : ''}" data-fav="${r.id}">♥</button>
     <div style="--b:${(i % 7) * .4}s">${pic(r)}</div>
     <div class="cname">${esc(r.name)}</div>
-    <div class="cmeta">⏱ ${fmtTime(r.mins)} · ${flames(r.diff)}</div>
+    <div class="cmeta">⏱ ${fmtTime(r.mins)} · ${flames(r.diff)} · ${Math.round(nutOf(r).cal)} cal</div>
+    ${logOf(r.id).length ? `<div class="cmeta crate">${ratingOf(r.id) ? starStr(ratingOf(r.id)) : ''} <b>Cooked ${logOf(r.id).length}×</b></div>` : ''}
     ${sc ? `<div class="mbar"><i style="width:${pct}%"></i></div><div class="mtxt">${sc.have}/${sc.total} in pantry</div>` : ''}
   </div>`;
 }
@@ -207,6 +216,9 @@ function filtered() {
   if (UI.sort === 'az') list.sort((a, b) => a.name.localeCompare(b.name));
   else if (UI.sort === 'time') list.sort((a, b) => a.mins - b.mins);
   else if (UI.sort === 'match') list.sort((a, b) => { const x = ingScore(a), y = ingScore(b); return (y.have / y.total) - (x.have / x.total) || x.miss.length - y.miss.length; });
+  else if (UI.sort === 'rated') list.sort((a, b) => ratingOf(b.id) - ratingOf(a.id) || logOf(b.id).length - logOf(a.id).length);
+  else if (UI.sort === 'protein') list.sort((a, b) => nutOf(b).p - nutOf(a).p);
+  else if (UI.sort === 'lowcal') list.sort((a, b) => nutOf(a).cal - nutOf(b).cal);
   else if (UI.sort === 'diff') { const o = { Easy: 0, Medium: 1, Difficult: 2 }; list.sort((a, b) => o[a.diff] - o[b.diff]); }
   return list;
 }
@@ -223,7 +235,8 @@ function vRecipes() {
       <select class="sel" id="cui" style="flex:1;min-width:0">${cuis.map(c => `<option value="${c}" ${UI.cui === c ? 'selected' : ''}>${c === 'All' ? '🌎 All cuisines' : c}</option>`).join('')}</select>
       <select class="sel" id="sort" style="flex:1;min-width:0">
         <option value="az" ${UI.sort === 'az' ? 'selected' : ''}>A → Z</option><option value="time" ${UI.sort === 'time' ? 'selected' : ''}>Quickest</option>
-        <option value="diff" ${UI.sort === 'diff' ? 'selected' : ''}>Easiest</option><option value="match" ${UI.sort === 'match' ? 'selected' : ''}>Best pantry match</option></select>
+        <option value="diff" ${UI.sort === 'diff' ? 'selected' : ''}>Easiest</option><option value="match" ${UI.sort === 'match' ? 'selected' : ''}>Best pantry match</option>
+        <option value="rated" ${UI.sort === 'rated' ? 'selected' : ''}>My top rated</option><option value="protein" ${UI.sort === 'protein' ? 'selected' : ''}>Most protein</option><option value="lowcal" ${UI.sort === 'lowcal' ? 'selected' : ''}>Fewest calories</option></select>
     </div>
     <div id="rlist"></div></div>`;
   drawList();
@@ -286,6 +299,7 @@ function drawDetail(first) {
     <h2 class="dtitle">${esc(r.name)}</h2>
     <div class="meta"><span>${CAT_EMO[r.cat] || '🍽️'} ${r.cat}</span><span class="dm-wrap">${flames(r.diff)} ${r.diff}</span><span>⏱ ${fmtTime(r.mins)}</span><span>🌎 ${esc(r.cui)}</span>
       ${st.pantry.size ? `<span>🥫 ${sc.have}/${sc.total} stocked</span>` : ''}</div>
+    <button class="btn cookbtn" id="aCook">👨‍🍳 Start Cook Mode</button>
     <div class="actions">
       <button id="aFav" class="${st.favs.has(r.id) ? 'on' : ''}"><span>${st.favs.has(r.id) ? '❤️' : '🤍'}</span>Favorite</button>
       <button id="aShare"><span>📤</span>Share Card</button>
@@ -295,6 +309,8 @@ function drawDetail(first) {
     <div class="panel"><h4>🍽️ Servings <small>original: ${r.serves}</small></h4>
       <div class="serv"><div class="stepper"><button id="sMinus">−</button><b>${cur.serves} ${cur.serves === 1 ? 'serving' : 'servings'}</b><button id="sPlus">+</button></div>
       ${cur.serves !== r.serves ? '<button class="btn sm ghost" id="sReset">Reset</button>' : `<span style="color:var(--muted);font-size:13px">×${num(f, 2)}</span>`}</div></div>
+    ${nutPanel(r, cur.serves)}
+    ${ratePanel(r)}
     <div class="panel"><h4>⚖️ Units</h4><div class="units">
       <div class="ul">Volume ${seg('vol', [['us', 'Cups/Tbsp'], ['floz', 'fl oz'], ['metric', 'ml/L']])}</div>
       <div class="ul">Weight ${seg('wt', [['us', 'oz/lb'], ['metric', 'g/kg']])}</div>
@@ -315,6 +331,22 @@ function drawDetail(first) {
   </div>`;
   if (!first) body.scrollTop = scroll;
 }
+function nutPanel(r, serves) {
+  const n = nutOf(r); const tot = x => Math.round(x * serves);
+  const cell = (v, l, u = 'g') => `<div class="nut"><b>${Math.round(v)}${u}</b><small>${l}</small></div>`;
+  return `<div class="panel"><h4>🥗 Nutrition <small>per serving · estimate</small></h4>
+    <div class="nutgrid">${cell(n.cal, 'Calories', '')}${cell(n.p, 'Protein')}${cell(n.c, 'Carbs')}${cell(n.f, 'Fat')}</div>
+    <div class="nutfoot">All ${serves} servings: ${tot(n.cal).toLocaleString()} cal · ${tot(n.p)}g protein · ${tot(n.c)}g carbs · ${tot(n.f)}g fat
+    ${n.coverage < .95 ? `<br>Some ingredients aren't in the nutrition table, so the real numbers may be a bit higher.` : ''}<br>Calculated from the ingredient list using typical values. Brands and portions vary.</div></div>`;
+}
+function ratePanel(r) {
+  const l = logOf(r.id), avg = ratingOf(r.id);
+  return `<div class="panel"><h4>⭐ My Ratings & Cook Log <small>${l.length ? 'cooked ' + l.length + '×' : 'not cooked yet'}</small></h4>
+    ${l.length ? `<div class="ravg">${avg ? starStr(avg, 'big') + `<b>${avg.toFixed(1)}</b>` : ''}</div>` : '<div class="sub" style="margin:0 0 10px">Cooked this? Log it to rate it and keep notes for next time.</div>'}
+    ${l.slice().reverse().map(e => `<div class="logrow">${e.photo ? `<img src="${e.photo}" alt="">` : ''}<div class="lt"><div>${e.stars ? starStr(e.stars) : ''} <small>${new Date(e.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}${e.serves ? ' · ' + e.serves + ' servings' : ''}</small></div>
+      ${e.note ? `<div class="lnote">“${esc(e.note)}”</div>` : ''}</div><button class="del" data-dellog="${e.at}">✕</button></div>`).join('')}
+    <button class="btn sm steel" id="aLog" style="margin-top:8px">📝 Log a cook</button></div>`;
+}
 function seg(key, opts) { return `<div class="seg" data-seg="${key}">${opts.map(o => `<button class="${st.set[key] === o[0] ? 'on' : ''}" data-v="${o[0]}">${o[1]}</button>`).join('')}</div>`; }
 $('#dBody').addEventListener('click', e => {
   const r = getRecipe(cur && cur.id); if (!r) return;
@@ -329,6 +361,9 @@ $('#dBody').addEventListener('click', e => {
   if (t.closest('#sReset')) { cur.serves = r.serves; drawDetail(); return; }
   if (t.closest('#aFav')) { toggleFav(r.id); drawDetail(); return; }
   if (t.closest('#aShare')) { shareCard(r, cur.serves); return; }
+  if (t.closest('#aCook')) { startCook(r, cur.serves); return; }
+  if (t.closest('#aLog')) { rateModal(r, cur.serves); return; }
+  const dl = t.closest('[data-dellog]'); if (dl) { st.log[r.id] = logOf(r.id).filter(e => String(e.at) !== dl.dataset.dellog); if (!st.log[r.id].length) delete st.log[r.id]; save.log(); Snd.chop(); drawDetail(); return; }
   if (t.closest('#aEdit')) { openEditor(r, !r.mine); return; }
   if (t.closest('#aDel')) {
     modal(`<h3 style="margin-top:0">Delete “${esc(r.name)}”?</h3><p style="color:var(--muted)">This can't be undone.</p><div class="row" style="justify-content:center"><button class="btn ghost" data-mclose>Cancel</button><button class="btn" id="mDel">Delete</button></div>`);
@@ -345,6 +380,82 @@ $('#dBody').addEventListener('click', e => {
     const b = $('#mStock'); if (b) b.onclick = () => { miss.forEach(m => st.pantry.add(pkey(m))); save.pantry(); closeModal(); Snd.bubble(); toast('🥫 Added to Pantry'); drawDetail(); };
   }
 });
+
+/* ================= RATING MODAL ================= */
+function rateModal(r, serves, fromCook) {
+  let stars = 0, photo = null;
+  modal(`<h3 style="margin:0 0 4px">${fromCook ? '🎉 Order up!' : '📝 Log a cook'}</h3><div style="color:var(--muted);font-size:14px">${fromCook ? 'How did it turn out?' : esc(r.name)}</div>
+    <div class="starpick" id="sp">${[1, 2, 3, 4, 5].map(k => `<button data-s="${k}">★</button>`).join('')}</div>
+    <textarea id="rNote" class="rnote" placeholder="Notes for next time… (e.g. less red pepper, add more garlic)"></textarea>
+    <div class="row" style="justify-content:center;margin:8px 0"><label class="btn sm steel">📷 Add photo<input type="file" id="rPhoto" accept="image/*" style="display:none"></label><span id="rPrev"></span></div>
+    <div class="row" style="justify-content:center"><button class="btn ghost" data-mclose>${fromCook ? 'Skip' : 'Cancel'}</button><button class="btn" id="rSave">Save</button></div>`);
+  $('#sp').onclick = e => { const b = e.target.closest('[data-s]'); if (!b) return; stars = +b.dataset.s; $$('#sp button').forEach(x => x.classList.toggle('on', +x.dataset.s <= stars)); Snd.chop(); };
+  $('#rPhoto').onchange = e => { const f = e.target.files[0]; if (!f) return; const url = URL.createObjectURL(f), im = new Image();
+    im.onload = () => { const S = 360, c = document.createElement('canvas'); c.width = c.height = S; const m = Math.min(im.width, im.height);
+      c.getContext('2d').drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, S, S); photo = c.toDataURL('image/jpeg', .72); URL.revokeObjectURL(url);
+      $('#rPrev').innerHTML = `<img src="${photo}" style="width:46px;height:46px;border-radius:10px;object-fit:cover;margin:0">`; };
+    im.src = url; };
+  $('#rSave').onclick = () => {
+    const note = $('#rNote').value.trim();
+    if (!stars && !note && !photo) return toast('Tap the stars to rate it');
+    const e = { at: Date.now(), stars, serves }; if (note) e.note = note; if (photo) e.photo = photo;
+    (st.log[r.id] = logOf(r.id)).push(e); save.log(); closeModal(); Snd.ding(); toast(stars >= 4 ? '⭐ Chef\'s kiss! Saved.' : '📝 Saved to your cook log');
+    if (cur && cur.id === r.id) drawDetail(); if (UI.tab !== 'pantry' && UI.tab !== 'kitchen') render();
+  };
+}
+
+/* ================= COOK MODE ================= */
+let ck = null, wakeLock = null;
+async function keepAwake(on) {
+  try { if (on && 'wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } else if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; } } catch (e) { }
+}
+document.addEventListener('visibilitychange', () => { if (ck && document.visibilityState === 'visible') keepAwake(true); });
+function startCook(r, serves) {
+  ck = { r, serves, i: 0, have: new Set() };
+  $('#cook').classList.add('open'); keepAwake(true); drawCook(); Snd.sizzle();
+}
+function endCook(finished) {
+  const r = ck && ck.r, serves = ck && ck.serves; $('#cook').classList.remove('open'); keepAwake(false); ck = null;
+  if (finished && r) setTimeout(() => rateModal(r, serves, true), 350);
+}
+function drawCook() {
+  const { r, serves, i } = ck, f = serves / r.serves, N = r.steps.length + 1;
+  $('#ckTitle').textContent = r.name;
+  $('#ckProg').style.width = (i / N * 100) + '%';
+  $('#ckCount').textContent = i === 0 ? 'Get ready' : i === N ? 'Done!' : `Step ${i} of ${N - 1}`;
+  let html;
+  if (i === 0) {
+    html = `<div class="ckhead">🧺 Gather everything</div><div class="cksub">${serves} servings · tap items as you set them out</div>
+      ${r.ing.map((g, k) => { const L = ingLine(g, f); return `<button class="ckitem ${ck.have.has(k) ? 'on' : ''}" data-h="${k}"><span class="ck">${ck.have.has(k) ? '✓' : ''}</span><span>${L.tt ? '' : `<b>${esc(L.q)}</b> `}${esc(cap(L.n))}${L.note && !L.tt ? ` <small>(${esc(L.note)})</small>` : ''}${L.tt ? ' <small>(to taste)</small>' : ''}</span></button>`; }).join('')}
+      <div class="ckhead sm">🍳 Tools</div><div class="toolchips">${r.tools.map(t => `<span class="tc">${esc(t)}</span>`).join('')}</div>`;
+  } else if (i === N) {
+    html = `<div class="ckdone"><div class="big">🎉</div><div class="ckhead">Order up, Chef!</div><div class="cksub">${esc(r.name)} is ready.</div>
+      <button class="btn" id="ckFinish" style="font-size:18px;padding:14px 22px">⭐ Rate & log this cook</button></div>`;
+  } else {
+    const s = r.steps[i - 1];
+    html = `<div class="cknum">${i}</div><div class="cktext">${esc(convTemps(s))}</div><div class="cktimers">${timerChips(s, i - 1)}</div>
+      ${i < N - 1 ? `<div class="cknext"><small>NEXT</small>${esc(convTemps(r.steps[i])).slice(0, 110)}${r.steps[i].length > 110 ? '…' : ''}</div>` : ''}`;
+  }
+  const b = $('#ckBody'); b.innerHTML = `<div class="ckslide">${html}</div>`; b.scrollTop = 0;
+  $('#ckPrev').disabled = i === 0; $('#ckNext').textContent = i === 0 ? "Let's cook →" : i === N - 1 ? 'Finish ✓' : i === N ? 'Close' : 'Next →';
+}
+function ckGo(d) {
+  if (!ck) return; const N = ck.r.steps.length + 1;
+  if (d > 0 && ck.i === N) { endCook(false); return; }
+  const n = Math.max(0, Math.min(N, ck.i + d)); if (n === ck.i) return;
+  ck.i = n; n === N ? Snd.ding() : Snd.whoosh(); drawCook();
+}
+$('#ckPrev').onclick = () => ckGo(-1); $('#ckNext').onclick = () => ckGo(1);
+$('#ckClose').onclick = () => { if (ck && ck.i > 0 && ck.i < ck.r.steps.length + 1) { modal(`<h3 style="margin-top:0">Leave Cook Mode?</h3><div class="row" style="justify-content:center"><button class="btn ghost" data-mclose>Keep cooking</button><button class="btn" id="ckLeave">Leave</button></div>`); $('#ckLeave').onclick = () => { closeModal(); endCook(false); }; } else endCook(false); };
+$('#ckBody').addEventListener('click', e => {
+  const tb = e.target.closest('[data-timer]'); if (tb) { startTimer(+tb.dataset.timer, ck.r.name.slice(0, 18) + ' · ' + tb.dataset.label); return; }
+  const h = e.target.closest('[data-h]'); if (h) { const k = +h.dataset.h; ck.have.has(k) ? ck.have.delete(k) : ck.have.add(k); h.classList.toggle('on'); $('.ck', h).textContent = ck.have.has(k) ? '✓' : ''; Snd.chop(); return; }
+  if (e.target.closest('#ckFinish')) endCook(true);
+});
+(() => { let x0 = null, y0 = 0; const el = $('#ckBody');
+  el.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  el.addEventListener('touchend', e => { if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) ckGo(dx < 0 ? 1 : -1); }, { passive: true }); })();
 
 /* ================= TIMERS ================= */
 const timers = [];
@@ -758,7 +869,7 @@ $('#sBody').addEventListener('click', async e => {
   const sg = t.closest('[data-seg] button'); if (sg) { st.set[sg.parentNode.dataset.seg] = sg.dataset.v; save.set(); Snd.chop(); drawSettings(); return; }
   const tg = t.closest('[data-st]'); if (tg) { const k = tg.dataset.st; st.set[k] = !st.set[k]; save.set(); drawSettings(); Snd.chop(); return; }
   if (t.closest('#sExp')) {
-    const data = { app: 'yes-chef', v: 1, at: new Date().toISOString(), pantry: [...st.pantry], tools: [...st.tools], favs: [...st.favs], custom: st.custom, myIng: st.myIng, myTools: st.myTools, settings: st.set };
+    const data = { app: 'yes-chef', v: 1, at: new Date().toISOString(), pantry: [...st.pantry], tools: [...st.tools], favs: [...st.favs], log: st.log, custom: st.custom, myIng: st.myIng, myTools: st.myTools, settings: st.set };
     const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
     const name = 'yes-chef-backup-' + new Date().toISOString().slice(0, 10) + '.json';
     const file = new File([blob], name, { type: 'application/json' });
@@ -768,7 +879,7 @@ $('#sBody').addEventListener('click', async e => {
   }
   if (t.closest('#sReset')) {
     modal(`<h3 style="margin-top:0">Reset everything?</h3><p style="color:var(--muted)">Pantry, kitchen, favorites and your recipes will be erased.</p><div class="row" style="justify-content:center"><button class="btn ghost" data-mclose>Cancel</button><button class="btn" id="mReset">Reset</button></div>`);
-    $('#mReset').onclick = () => { ['pantry', 'tools', 'favs', 'custom', 'myIng', 'myTools', 'settings'].forEach(k => localStorage.removeItem('yc_' + k)); location.reload(); };
+    $('#mReset').onclick = () => { ['pantry', 'tools', 'favs', 'log', 'custom', 'myIng', 'myTools', 'settings'].forEach(k => localStorage.removeItem('yc_' + k)); location.reload(); };
   }
 });
 $('#sBody').addEventListener('change', e => {
@@ -778,7 +889,7 @@ $('#sBody').addEventListener('change', e => {
     try {
       const d = JSON.parse(rd.result); if (d.app !== 'yes-chef') throw 0;
       st.pantry = new Set(d.pantry || []); st.tools = new Set(d.tools || []); st.favs = new Set(d.favs || []);
-      st.custom = d.custom || []; st.myIng = d.myIng || []; st.myTools = d.myTools || []; st.set = Object.assign(st.set, d.settings || {});
+      st.custom = d.custom || []; st.log = d.log || {}; st.myIng = d.myIng || []; st.myTools = d.myTools || []; st.set = Object.assign(st.set, d.settings || {});
       Object.values(save).forEach(fn => fn()); refreshDatalist(); drawSettings(); render(); Snd.ding(); toast('✅ Backup restored');
     } catch (err) { toast('⚠️ That file isn\'t a Yes, Chef backup'); }
   };
