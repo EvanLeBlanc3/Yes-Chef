@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Yes, Chef">
+<meta name="theme-color" content="#141009">
+<title>Yes, Chef!</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="bg"></div>
+<header>
+  <div class="logo">
+    <div class="logoArt"><svg viewBox="0 0 120 100" aria-hidden="true">
+<defs>
+ <linearGradient id="blade" x1="0" y1="-4" x2="0" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f5f7f9"/><stop offset=".5" stop-color="#bfc6cc"/><stop offset="1" stop-color="#7d868e"/></linearGradient>
+ <linearGradient id="handle" x1="0" y1="-5" x2="0" y2="5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8a5a2f"/><stop offset="1" stop-color="#3e2210"/></linearGradient>
+ <radialGradient id="flameO" cx=".5" cy=".85" r=".8"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffb238"/><stop offset=".75" stop-color="#ff5a14"/><stop offset="1" stop-color="#ff5a14" stop-opacity="0"/></radialGradient>
+ <radialGradient id="flameB" cx=".5" cy=".9" r=".8"><stop offset="0" stop-color="#e6f2ff"/><stop offset=".4" stop-color="#5aa0ff"/><stop offset="1" stop-color="#2b5cff" stop-opacity="0"/></radialGradient>
+ <radialGradient id="burnGlow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff8a2a" stop-opacity=".55"/><stop offset="1" stop-color="#ff5a14" stop-opacity="0"/></radialGradient>
+ <linearGradient id="salt" x1="0" x2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#c9ced3"/></linearGradient>
+ <linearGradient id="pep" x1="0" x2="1"><stop offset="0" stop-color="#5a3a24"/><stop offset="1" stop-color="#22140a"/></linearGradient>
+ <linearGradient id="cap" x1="0" x2="1"><stop offset="0" stop-color="#eef0f2"/><stop offset=".5" stop-color="#9aa2a9"/><stop offset="1" stop-color="#5d656c"/></linearGradient>
+</defs>
+<ellipse cx="60" cy="86" rx="40" ry="12" fill="url(#burnGlow)" class="bglow"/>
+<g class="burner">
+ <ellipse cx="60" cy="90" rx="24" ry="5" fill="#1d1f22" stroke="#4a4f55" stroke-width="1.2"/>
+ <g class="flames"><g transform="translate(42 88)"><path class="fb" d="M-3 0 Q-3 -5 0 -9 Q3 -5 3 0 Z" fill="url(#flameB)" style="animation-delay:0s"/><path class="fo" d="M-2.3 -4 Q-2.5 -10 0 -15 Q2.5 -10 2.3 -4 Z" fill="url(#flameO)" style="animation-delay:0s"/></g><g transform="translate(49 88)"><path class="fb" d="M-3 0 Q-3 -5 0 -9 Q3 -5 3 0 Z" fill="url(#flameB)" style="animation-delay:0.2s"/><path class="fo" d="M-2.3 -4 Q-2.5 -10 0 -15 Q2.5 -10 2.3 -4 Z" fill="url(#flameO)" style="animation-delay:0.2s"/></g><g transform="translate(56 88)"><path class="fb" d="M-3 0 Q-3 -5 0 -9 Q3 -5 3 0 Z" fill="url(#flameB)" style="animation-delay:0.4s"/><path class="fo" d="M-2.3 -4 Q-2.5 -10 0 -15 Q2.5 -10 2.3 -4 Z" fill="url(#flameO)" style="animation-delay:0.4s"/></g><g transform="translate(64 88)"><path class="fb" d="M-3 0 Q-3 -5 0 -9 Q3 -5 3 0 Z" fill="url(#flameB)" style="animation-delay:0.1s"/><path class="fo" d="M-2.3 -4 Q-2.5 -10 0 -15 Q2.5 -10 2.3 -4 Z" fill="url(#flameO)" style="animation-delay:0.1s"/></g><g transform="translate(71 88)"><path class="fb" d="M-3 0 Q-3 -5 0 -9 Q3 -5 3 0 Z" fill="url(#flameB)" style="animation-delay:0.3s"/><path class="fo" d="M-2.3 -4 Q-2.5 -10 0 -15 Q2.5 -10 2.3 -4 Z" fill="url(#flameO)" style="animation-delay:0.3s"/></g><g transform="translate(78 88)"><path class="fb" d="M-3 0 Q-3 -5 0 -9 Q3 -5 3 0 Z" fill="url(#flameB)" style="animation-delay:0.5s"/><path class="fo" d="M-2.3 -4 Q-2.5 -10 0 -15 Q2.5 -10 2.3 -4 Z" fill="url(#flameO)" style="animation-delay:0.5s"/></g></g>
+ <path d="M30 92 L90 92 M36 86 L44 96 M84 86 L76 96" stroke="#3a3f44" stroke-width="2.4" stroke-linecap="round"/>
+ <circle class="fs fs0" r="1"/><circle class="fs fs1" r="1"/><circle class="fs fs2" r="1"/><circle class="fs fs3" r="1"/><circle class="fs fs4" r="1"/>
+</g>
+<g class="shaker salt" transform="translate(16 30)"><g class="shk">
+ <path d="M-7 -6 L7 -6 L8 16 Q0 19 -8 16 Z" fill="url(#salt)" stroke="#8f979e" stroke-width=".8"/>
+ <path d="M-7 -6 Q0 -16 7 -6 Z" fill="url(#cap)"/><circle cx="-2" cy="-9" r=".9" fill="#333"/><circle cx="2" cy="-9" r=".9" fill="#333"/><circle cx="0" cy="-12" r=".9" fill="#333"/>
+ <text x="0" y="8" text-anchor="middle" font-size="9" font-weight="900" fill="#7d868e" font-family="Georgia,serif">S</text></g>
+ <g class="grains salt"><circle class="gr gr0" r="1.1"/><circle class="gr gr1" r="0.9"/><circle class="gr gr2" r="1.1"/><circle class="gr gr3" r="0.9"/><circle class="gr gr4" r="1.1"/><circle class="gr gr5" r="0.9"/></g></g>
+<g class="shaker pep" transform="translate(104 30)"><g class="shk">
+ <path d="M-7 -6 L7 -6 L8 16 Q0 19 -8 16 Z" fill="url(#pep)" stroke="#0e0905" stroke-width=".8"/>
+ <path d="M-7 -6 Q0 -16 7 -6 Z" fill="url(#cap)"/><circle cx="-2" cy="-9" r=".9" fill="#222"/><circle cx="2" cy="-9" r=".9" fill="#222"/><circle cx="0" cy="-12" r=".9" fill="#222"/>
+ <text x="0" y="8" text-anchor="middle" font-size="9" font-weight="900" fill="#c9975f" font-family="Georgia,serif">P</text></g>
+ <g class="grains pep"><circle class="gr gr0" r="1.1"/><circle class="gr gr1" r="0.9"/><circle class="gr gr2" r="1.1"/><circle class="gr gr3" r="0.9"/><circle class="gr gr4" r="1.1"/><circle class="gr gr5" r="0.9"/></g></g>
+<g transform="translate(60 44)">
+ <g transform="rotate(-38)"><g class="k1"><g class="kmove">
+  <path d="M0 -4 L46 -3 Q58 -1 62 3 L0 4 Z" fill="url(#blade)" stroke="#5d656c" stroke-width=".6"/>
+  <path d="M2 -1.2 L50 -.6" stroke="#fff" stroke-opacity=".7" stroke-width=".8"/>
+  <rect x="-4" y="-5" width="4" height="10" rx="1" fill="#9aa2a9"/>
+  <rect x="-28" y="-4.5" width="24" height="9" rx="4" fill="url(#handle)"/>
+  <circle cx="-22" cy="0" r="1.3" fill="#d9dde1"/><circle cx="-11" cy="0" r="1.3" fill="#d9dde1"/></g></g></g>
+ <g transform="rotate(218) scale(1 -1)"><g class="k2"><g class="kmove">
+  <path d="M0 -4 L46 -3 Q58 -1 62 3 L0 4 Z" fill="url(#blade)" stroke="#5d656c" stroke-width=".6"/>
+  <path d="M2 -1.2 L50 -.6" stroke="#fff" stroke-opacity=".7" stroke-width=".8"/>
+  <rect x="-4" y="-5" width="4" height="10" rx="1" fill="#9aa2a9"/>
+  <rect x="-28" y="-4.5" width="24" height="9" rx="4" fill="url(#handle)"/>
+  <circle cx="-22" cy="0" r="1.3" fill="#d9dde1"/><circle cx="-11" cy="0" r="1.3" fill="#d9dde1"/></g></g></g>
+ <g class="ksparks"><circle class="ks ks0" r="1.3"/><circle class="ks ks1" r="1.3"/><circle class="ks ks2" r="1.3"/><circle class="ks ks3" r="1.3"/><circle class="ks ks4" r="1.3"/><circle class="ks ks5" r="1.3"/><circle class="ks ks6" r="1.3"/><circle class="ks ks7" r="1.3"/></g>
+</g>
+</svg></div>
+    <h1>Yes, Chef!</h1>
+  </div>
+  <button class="hbtn" id="btnNew" aria-label="New recipe">➕</button>
+  <button class="hbtn" id="btnSettings" aria-label="Settings">⚙️</button>
+</header>
+<main id="main"></main>
+<nav id="nav">
+  <button data-tab="recipes" class="on"><span>🔪</span>Recipes</button>
+  <button data-tab="match"><span>🧠</span>What Can I Make</button>
+  <button data-tab="pantry"><span>🥫</span>Pantry</button>
+  <button data-tab="kitchen"><span>🍳</span>Kitchen</button>
+  <button data-tab="favs"><span>❤️</span>Favorites</button>
+</nav>
+<section class="sheet" id="detail"><div class="bar"><button class="hbtn" data-close>⬇️</button><h3 id="dTitle"></h3></div><div class="body" id="dBody"></div></section>
+<section class="sheet" id="editor"><div class="bar"><button class="hbtn" data-close>✖️</button><h3 id="eTitle">New Recipe</h3><button class="btn sm" id="eSave">Save</button></div><div class="body" id="eBody"></div></section>
+<section class="sheet" id="settings"><div class="bar"><button class="hbtn" data-close>⬇️</button><h3>Settings</h3></div><div class="body" id="sBody"></div></section>
+<div id="timers"></div>
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+<div id="toast"></div>
+<datalist id="dlIng"></datalist>
+<div id="rotate"><div class="big">📱</div><h2 style="font-family:Georgia,serif;color:#ffb238;margin:0">Flip me back, Chef!</h2><div style="color:#bfae98">Yes, Chef works best in portrait mode.</div></div>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

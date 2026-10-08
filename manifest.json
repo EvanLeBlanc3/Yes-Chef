@@ -1,0 +1,15 @@
+{
+  "name": "Yes, Chef!",
+  "short_name": "Yes, Chef",
+  "description": "300+ recipes, a smart pantry, kitchen tools and recipe cards — works offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141009",
+  "theme_color": "#141009",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
