@@ -3,7 +3,7 @@
   --wood:#c9975f; --wood-l:#e4c08f; --wood-d:#8a5a2f; --ink:#2e1b0c;
   --ember:#ff7a1a; --flame:#ffb238; --hot:#ff4d1a;
   --steel:#c9ced3; --steel-d:#7c858d; --text:#f6ead9; --muted:#bfae98;
-  --good:#7bc47f; --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
+  --good:#7bc47f; --safe-t:calc(env(safe-area-inset-top) + 20px); --safe-b:env(safe-area-inset-bottom);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--char);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
