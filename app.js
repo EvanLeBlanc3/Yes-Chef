@@ -464,12 +464,22 @@ function startTimer(secs, label) {
   Snd.bubble(); toast('⏱ Timer started'); drawTimers();
 }
 function drawTimers() {
-  $('#timers').innerHTML = timers.map(t => {
+  // Update existing timers in place so they never re-render (no blinking).
+  const box = $('#timers');
+  $$('.timer', box).forEach(el => { if (!timers.some(t => String(t.id) === el.dataset.tid)) el.remove(); });
+  timers.forEach(t => {
     const left = Math.max(0, Math.round((t.end - Date.now()) / 1000));
-    const h = Math.floor(left / 3600), m = Math.floor(left % 3600 / 60), s = left % 60;
-    const txt = (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0');
-    return `<div class="timer ${left === 0 ? 'ring' : ''}" data-tid="${t.id}"><b>${left === 0 ? 'DONE!' : txt}</b><span>${esc(t.label)}</span><button class="del" data-tx="${t.id}">✕</button></div>`;
-  }).join('');
+    const h = Math.floor(left / 3600), m = Math.floor(left % 3600 / 60), sec = left % 60;
+    const txt = left === 0 ? 'DONE!' : (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(sec).padStart(2, '0');
+    let el = box.querySelector(`[data-tid="${t.id}"]`);
+    if (!el) {
+      el = document.createElement('div'); el.className = 'timer new'; el.dataset.tid = t.id;
+      el.innerHTML = `<b></b><span>${esc(t.label)}</span><button class="del" data-tx="${t.id}">✕</button>`;
+      box.appendChild(el); setTimeout(() => el.classList.remove('new'), 400);
+    }
+    const b = el.querySelector('b'); if (b.textContent !== txt) b.textContent = txt;
+    if (el.classList.contains('ring') !== (left === 0)) el.classList.toggle('ring', left === 0);
+  });
 }
 $('#timers').addEventListener('click', e => { const x = e.target.closest('[data-tx]'); if (x) { const i = timers.findIndex(t => String(t.id) === x.dataset.tx); if (i > -1) timers.splice(i, 1); drawTimers(); } });
 setInterval(() => {
