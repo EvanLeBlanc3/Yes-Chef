@@ -897,6 +897,15 @@ $('#sBody').addEventListener('change', e => {
 });
 
 /* ================= INIT ================= */
+function fitScreen() {
+  // iOS home-screen apps can report a viewport shorter than the screen, leaving a dead band at the bottom.
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  let gap = 0;
+  if (standalone && innerHeight < innerWidth === false) gap = Math.max(0, Math.round(screen.height - innerHeight));
+  if (gap > 140) gap = 0;
+  document.documentElement.style.setProperty('--gap', gap + 'px');
+}
+fitScreen(); addEventListener('resize', fitScreen); addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
 function refreshDatalist() { $('#dlIng').innerHTML = allPantry().map(p => `<option value="${esc(p.n)}">`).join(''); }
 refreshDatalist();
 render();
